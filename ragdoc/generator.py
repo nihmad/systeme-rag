@@ -20,7 +20,7 @@ class Generator:
         print(f"[generator] Chargement du LLM : {self.model_name} (4bit={load_in_4bit})")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
-        kwargs: dict = {"torch_dtype": torch.float16, "device_map":{"": 0}
+        kwargs: dict = {"torch_dtype": torch.float16, "device_map":{"": 0}}
         if load_in_4bit:
             from transformers import BitsAndBytesConfig
             kwargs["quantization_config"] = BitsAndBytesConfig(
