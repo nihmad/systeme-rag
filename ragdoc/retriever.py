@@ -1,8 +1,6 @@
 """
 Retrieveur : encodage des passages avec un modèle d'embedding (sentence-
 transformers) et recherche par similarité cosinus via FAISS.
-
-L'index utilise IndexFlatIP sur des vecteurs normalisés == similarité cosinus.
 """
 from __future__ import annotations
 
@@ -39,7 +37,7 @@ class Retriever:
             self._prep(texts, kind),
             batch_size=32,
             convert_to_numpy=True,
-            normalize_embeddings=True,   # -> produit scalaire = cosinus
+            normalize_embeddings=True, 
             show_progress_bar=len(texts) > 64,
         )
         return emb.astype("float32")
