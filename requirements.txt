@@ -1,22 +1,13 @@
-# --- Cœur RAG ---------------------------------------------------------------
-sentence-transformers>=3.0.0
-transformers>=4.44.0
-torch>=2.2.0
-faiss-cpu>=1.8.0
-accelerate>=0.33.0
-
-# --- Quantization 4 bits (uniquement si vous utilisez Mistral-7B) -----------
-bitsandbytes>=0.43.0
-
-# --- Évaluation -------------------------------------------------------------
-rouge-score>=0.1.2
-
-# --- Utilitaires ------------------------------------------------------------
-numpy>=1.26.0
-pandas>=2.0.0
-tqdm>=4.66.0
-
-# --- (Optionnel) métriques RAG avancées : faithfulness, answer relevancy ----
-# Nécessite un LLM juge (API ou local). Décommentez si vous l'utilisez.
-# ragas>=0.1.0
-# datasets>=2.20.0
+accelerate==1.13.0
+bitsandbytes==0.49.2
+datasets==4.0.0
+faiss-cpu==1.14.2
+gradio==5.50.0
+matplotlib==3.10.0
+numpy==2.0.2
+pandas==2.2.2
+rouge_score==0.1.2
+scikit-learn==1.6.1
+sentence-transformers==5.5.1
+torch==2.11.0
+transformers==5.9.0
