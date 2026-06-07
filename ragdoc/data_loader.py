@@ -1,12 +1,5 @@
 """
 Chargement du corpus : documentation technique MDN en français.
-
-Étapes :
-  1. clone *partiel* (shallow + sparse-checkout) du dépôt MDN translated-content,
-     limité aux sous-dossiers français listés dans config.MDN_SPARSE_PATHS ;
-  2. lecture des fichiers Markdown (`index.md`) et extraction du front-matter
-     (titre + slug) et du corps.
-
 On obtient une liste de documents { "id", "title", "url", "text" }.
 """
 from __future__ import annotations
