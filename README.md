@@ -1,172 +1,248 @@
-# RAG sur de la documentation technique francophone
+# Système RAG sur la documentation web MDN (français)
 
-Système **RAG (Retrieval-Augmented Generation)** appliqué à la documentation
-web de **MDN en français**. Projet réalisé dans le cadre du cours *Large Language
-Models*.
+> Projet du cours **Large Language Models** — ADEOTI Nihimath
 
-L'objectif : montrer concrètement qu'un LLM relié à une base documentaire
-(via récupération sémantique) répond de façon plus **fidèle** et **exacte**
-qu'un LLM seul, et étudier ce qui fait varier cette performance.
+Système de **Retrieval-Augmented Generation (RAG)** appliqué à la documentation
+technique web de [MDN](https://developer.mozilla.org/fr/) en français. Le projet
+compare un modèle de langage seul à un modèle augmenté par récupération, étudie
+l'influence du nombre de passages récupérés, et mesure l'apport de la
+spécialisation (fine-tuning) du modèle de récupération.
 
+---
 
-## 1. Problématique
+## 1. Cas d'usage et problématique
 
-> Un système RAG sur une documentation technique française permet-il à un LLM de
-> répondre de façon plus fidèle et exacte qu'en *closed-book* (sans contexte) ?
-> Quel est l'impact **(a)** du nombre de passages récupérés `k` et
-> **(b)** de la spécialisation du retrieveur par fine-tuning ?
+La documentation technique (HTML, CSS, JavaScript…) est volumineuse, précise et
+en constante évolution. Un grand modèle de langage interrogé seul (*closed-book*)
+répond à partir de sa seule mémoire paramétrique : il peut être imprécis,
+daté, ou produire des réponses non vérifiables.
 
-On y répond par trois expériences comparatives :
+L'approche RAG consiste à **récupérer les passages les plus pertinents** dans une
+base documentaire, puis à les fournir au modèle comme contexte pour qu'il rédige
+une réponse ancrée dans des sources réelles.
 
-1. **closed-book vs RAG** — gain apporté par la récupération (EM, F1, ROUGE-L).
-2. **ablation sur `k`** — évolution de Hit@k et du MRR selon le nombre de passages.
-3. **retrieveur de base vs spécialisé** — gain du fine-tuning de l'embedding model.
+Ce projet répond à trois questions :
 
+1. **RAG vs closed-book** — le contexte récupéré améliore-t-il la qualité des réponses ?
+2. **Effet de `k`** — combien de passages faut-il récupérer ?
+3. **Récupérateur de base vs spécialisé** — fine-tuner l'*embedder* sur le domaine améliore-t-il la récupération, et par ricochet la génération ?
 
-## 2. Cas d'usage et données
+---
 
-- **Corpus** : sous-ensemble de [MDN translated-content](https://github.com/mdn/translated-content)
-  en français (documentation HTML / CSS / guide JavaScript), licence **CC-BY-SA**.
-  Récupéré par *clone partiel* (shallow + sparse-checkout) pour rester léger.
-- **Exploration & nettoyage** : suppression des macros `{{...}}`, blocs de code,
-  balises HTML et liens Markdown, puis découpage en passages de ~800 caractères
-  avec recouvrement (voir `ragdoc/preprocessing.py`).
-- **Jeu d'évaluation** : généré automatiquement à partir du corpus — pour des
-  passages tirés au hasard, le LLM produit une question factuelle et sa réponse ;
-  le passage source sert de **vérité terrain** pour mesurer la récupération
-  (`ragdoc/eval_set.py`).
+## 2. Architecture du système
 
-
-## 3. Architecture
-
-```
-Question ──► [Retrieveur] ──► top-k passages ──► [Générateur LLM] ──► Réponse
-                 │                                       │
-        embeddings + FAISS                    prompt = contexte + question
+```mermaid
+flowchart LR
+    Q[Question] --> R[Récupérateur<br/>e5-base + FAISS]
+    C[(Corpus MDN<br/>passages)] --> R
+    R -->|top-k passages| P[Prompt + contexte]
+    P --> G[Générateur<br/>Mistral-7B 4 bits]
+    G --> A[Réponse + sources]
 ```
 
-| Composant      | Choix par défaut                              | Pourquoi |
-|----------------|-----------------------------------------------|----------|
-| Embeddings     | `intfloat/multilingual-e5-base`               | multilingue, fort en français |
-| Index          | FAISS `IndexFlatIP` (cosinus)                 | simple, exact, local |
-| Générateur     | `croissantllm/CroissantLLMChat-v0.1` (~1.3B)  | libre, bilingue FR/EN, tient sur un T4 gratuit |
-| Spécialisation | fine-tuning de l'embedder (`MultipleNegativesRankingLoss`) | rapproche question ↔ passage du domaine |
+- **Corpus** : documentation MDN française, nettoyée et découpée en passages (*chunks*).
+- **Récupérateur** : encodage des passages avec un modèle d'*embeddings*, indexation vectorielle **FAISS**, recherche des `k` passages les plus proches d'une question.
+- **Générateur** : **Mistral-7B-Instruct v0.3** quantifié en 4 bits, qui rédige la réponse à partir des passages récupérés.
+- **Pipeline** : `question → récupération top-k → construction du prompt → génération`.
 
-> Alternative générateur plus puissante : `mistralai/Mistral-7B-Instruct-v0.3`
-> avec quantization 4 bits (`CONFIG.model.load_in_4bit = True`). Ce modèle est
-> *gated* sur Hugging Face : il faut accepter sa licence et fournir un token.
+---
 
+## 3. Structure du dépôt
 
-## 4. Installation
+```
+systeme-rag/
+├── ragdoc/                     # Package principal
+│   ├── config.py               # Configuration (modèles, k, chemins, chunking…)
+│   ├── retriever.py            # Récupérateur : embeddings + index FAISS
+│   ├── generator.py            # Générateur : chargement + génération LLM
+│   ├── pipeline.py             # Orchestration RAG (RagPipeline)
+│   └── eval_set.py             # Construction du jeu d'évaluation
+├── scripts/
+│   ├── 01_build_corpus.py      # Corpus MDN : sparse-checkout + nettoyage + découpage
+│   ├── 02_build_index.py       # Indexation FAISS (option --finetuned)
+│   ├── 03_make_eval_set.py     # Génération du jeu d'évaluation (option -n)
+│   ├── 04_run_evaluation.py    # Évaluation RAG vs closed-book (options --finetuned, --n_gen)
+│   └── 05_finetune_embedder.py # Spécialisation de l'embedder (option --epochs)
+├── data/                       # Données générées (voir notes ci-dessous)
+│   └── eval_set.jsonl          # Jeu d'évaluation versionné (reproductibilité)
+├── results/                    # Rapports d'évaluation et figures
+│   ├── report_base.json
+│   ├── report_finetuned.json
+│   └── retrieval_base_vs_finetuned.png
+├── RAG_.ipynb                  # Notebook de démonstration de bout en bout
+├── requirements.txt
+└── README.md
+```
 
-### Option A — Google Colab (recommandée)
-Ouvrez `notebooks/RAG_doc_technique_fr_colab.ipynb` dans Colab, activez le GPU
-(*Exécution → Modifier le type d'exécution → GPU T4*) et exécutez les cellules
-dans l'ordre.
+> **Note sur les fichiers de `data/`.** Le corpus (`chunks.jsonl`), les index FAISS
+> et l'embedder fine-tuné sont des fichiers volumineux **régénérés par les scripts** ;
+> ils ne sont pas versionnés. Seul `eval_set.jsonl` est committé, car c'est lui qui
+> garantit que l'évaluation est reproductible à l'identique.
 
-### Option B — En local
+---
+
+## 4. Données
+
+- **Source** : sous-ensemble de [MDN translated-content](https://github.com/mdn/translated-content),
+  la documentation MDN traduite en français (contenu open source de Mozilla).
+- **Récupération** (`scripts/01_build_corpus.py`) : *sparse-checkout* du dépôt MDN
+  limité à trois dossiers, pour rester léger :
+  - `files/fr/web/html`
+  - `files/fr/web/css`
+  - `files/fr/web/javascript/guide`
+- **Nettoyage et découpage** : suppression du balisage et des éléments non textuels,
+  puis découpage en passages de **~800 caractères** avec un **recouvrement de 120
+  caractères** ; les passages de moins de **200 caractères** sont écartés.
+- **Volume** : ~8 943 passages (`data/chunks.jsonl`).
+- **Jeu d'évaluation** (`scripts/03_make_eval_set.py`) : paires
+  *(question, réponse de référence, passage source)* générées à partir du corpus,
+  enregistrées dans `data/eval_set.jsonl`. Ce fichier est versionné pour assurer
+  la reproductibilité des métriques.
+
+Les paramètres de découpage sont centralisés dans `ragdoc/config.py` (`ChunkConfig`).
+
+---
+
+## 5. Modèles utilisés
+
+| Rôle | Modèle | Détail |
+|------|--------|--------|
+| Embedder de base | `intfloat/multilingual-e5-base` | Multilingue ; préfixes `query:` / `passage:` gérés dans `retriever.py` |
+| Embedder spécialisé | `data/embedder_finetuned` | e5-base fine-tuné sur le domaine (`05_finetune_embedder.py`) |
+| Générateur | `unsloth/mistral-7b-instruct-v0.3` | Chargé en **4 bits** (quantification bitsandbytes) |
+
+Paramètres de génération : `temperature = 0.3`, `max_new_tokens = 256`.
+
+> Toute la configuration des modèles est centralisée dans `ragdoc/config.py`
+> (`ModelConfig`) : `generator_model = "unsloth/mistral-7b-instruct-v0.3"`,
+> `load_in_4bit = True`, `embedding_model = "intfloat/multilingual-e5-base"`.
+
+---
+
+## 6. Installation
+
+**Prérequis** : un GPU compatible CUDA avec au moins ~6 Go de VRAM (un **T4**,
+comme sur Google Colab, suffit pour Mistral-7B en 4 bits).
+
 ```bash
-git clone https://github.com/VOTRE_USER/rag-doc-technique-fr.git
-cd rag-doc-technique-fr
-python -m venv .venv && source .venv/bin/activate
+git clone https://github.com/nihmad/systeme-rag.git
+cd systeme-rag
 pip install -r requirements.txt
 ```
-Un GPU est fortement recommandé pour le générateur (CPU possible mais lent).
 
+> *(Optionnel)* Définir un jeton HuggingFace (`HF_TOKEN`) accélère les
+> téléchargements de modèles et lève les limites de débit. L'authentification
+> n'est pas obligatoire pour les modèles publics utilisés ici.
 
-## 5. Reproduire le projet (pas à pas)
+---
+
+## 7. Reproduction étape par étape
+
+Exécuter les scripts **dans l'ordre**, depuis la racine du dépôt.
 
 ```bash
-# 1. Construire le corpus de passages (clone MDN + nettoyage + découpage)
+# 1. Construire le corpus (sparse-checkout MDN + nettoyage + découpage)
 python scripts/01_build_corpus.py
 
-# 2. Encoder et indexer les passages (FAISS)
+# 2. Indexer les passages avec l'embedder de base (FAISS)
 python scripts/02_build_index.py
 
-# 3. Générer le jeu d'évaluation question/réponse
+# 3. Générer le jeu d'évaluation (commencer petit avec -n pour tester)
 python scripts/03_make_eval_set.py -n 100
 
-# 4. Évaluer : RAG vs closed-book + ablation sur k  -> results/report_base.json
-python scripts/04_run_evaluation.py --n_gen 30
+# 4. Évaluer le système de base (RAG vs closed-book) -> results/report_base.json
+python scripts/04_run_evaluation.py
 
-# 5. (Optionnel) Spécialiser le retrieveur, réindexer, réévaluer
+# 5. Spécialiser l'embedder sur le domaine
 python scripts/05_finetune_embedder.py --epochs 2
+
+# 6. Réindexer avec l'embedder fine-tuné
 python scripts/02_build_index.py --finetuned
+
+# 7. Réévaluer le système spécialisé -> results/report_finetuned.json
 python scripts/04_run_evaluation.py --finetuned --n_gen 30
 ```
 
-Démo rapide en Python :
-```python
-from ragdoc.retriever import Retriever
-from ragdoc.generator import Generator
-from ragdoc.pipeline import RagPipeline
+L'option `--n_gen 30` limite l'évaluation de la **génération** à 30 exemples
+(la génération LLM est coûteuse en temps), tandis que les métriques de
+**récupération** sont calculées sur l'ensemble du jeu d'évaluation.
 
-rag = RagPipeline(Retriever.load(), Generator())
-print(rag.answer("À quoi sert l'élément HTML <article> ?")["answer"])
-```
+Le notebook `RAG_.ipynb` reproduit ces étapes de bout en bout et fournit en plus
+une **démonstration interactive** (interface Gradio) et le graphique comparatif.
 
+---
 
-## 6. Structure du dépôt
+## 8. Évaluation et métriques
 
-```
-rag-doc-technique-fr/
-├── README.md
-├── requirements.txt
-├── ragdoc/                     # bibliothèque du projet
-│   ├── config.py               # tous les réglages (modèles, chemins, k…)
-│   ├── data_loader.py          # clone partiel MDN + parsing Markdown
-│   ├── preprocessing.py        # nettoyage + découpage en passages
-│   ├── retriever.py            # embeddings + index FAISS + recherche
-│   ├── generator.py            # chargement du LLM + génération
-│   ├── pipeline.py             # orchestration RAG (et closed-book)
-│   ├── eval_set.py             # génération du jeu d'évaluation
-│   ├── finetune_embedder.py    # spécialisation du retrieveur
-│   └── evaluation.py           # métriques (Hit@k, MRR, EM, F1, ROUGE-L)
-├── scripts/                    # points d'entrée en ligne de commande (01→05)
-├── notebooks/
-│   └── RAG_doc_technique_fr_colab.ipynb   # exécution de bout en bout
-├── data/                       # corpus, index, jeu d'éval (régénérables)
-└── results/                    # rapports d'évaluation (JSON)
-```
+**Récupération** (le bon passage est-il retrouvé ?)
+- `hit@k` : proportion de questions dont le passage de référence figure dans les `k` premiers résultats.
+- `MRR` (Mean Reciprocal Rank) : moyenne de l'inverse du rang du bon passage.
 
+L'évaluation inclut une **ablation sur `k`** (valeurs `k ∈ {1, 3, 5, 10}`,
+définies dans `RetrievalConfig`). Le pipeline utilise `top_k = 4` par défaut.
 
-## 7. Métriques
+**Génération** (la réponse est-elle correcte ?)
+- `EM` (Exact Match) : correspondance exacte avec la réponse de référence.
+- `F1` : recouvrement de *tokens* entre la réponse générée et la référence.
+- `ROUGE-L` : plus longue sous-séquence commune.
 
-- **Récupération** : `Hit@k` (le bon passage est-il dans le top-k ?), `MRR`.
-- **Génération** : `Exact Match` et `F1` au niveau des tokens (normalisés :
-  minuscules, sans accents ni ponctuation), `ROUGE-L`.
-- **(Optionnel)** métriques RAG avancées via [RAGAS](https://github.com/explodinggradients/ragas)
-  (*faithfulness*, *answer relevancy*, *context precision/recall*) — nécessite un
-  LLM juge ; dépendance commentée dans `requirements.txt`.
+La génération est mesurée dans deux conditions : **RAG** (avec contexte récupéré)
+et **closed-book** (LLM seul), afin d'isoler l'apport de la récupération.
 
+---
 
-## 8. Résultats
+## 9. Résultats
 
-> À compléter avec vos chiffres après exécution (les rapports sont écrits dans
-> `results/`). Exemple de tableau à remplir :
+### Récupération
 
-| Configuration            | Hit@1 | Hit@3 | MRR  | F1 (RAG) | F1 (closed-book) |
-|--------------------------|-------|-------|------|----------|------------------|
-| Embedder de base         |  …    |  …    |  …   |   …      |        …         |
-| Embedder spécialisé      |  …    |  …    |  …   |   …      |        —         |
+| Système | hit@1 | hit@3 | hit@5 | hit@10 | MRR |
+|---------|------:|------:|------:|-------:|------:|
+| Base | 0.55 | 0.81 | 0.88 | 0.94 | 0.692 |
+| Fine-tuné | **0.63** | **0.90** | **0.93** | **0.96** | **0.764** |
 
-Pistes d'analyse : gain du RAG vs closed-book, palier de `k`, apport du
-fine-tuning, cas d'échec (qualité du petit LLM, bruit du corpus…).
+![Récupération : base vs fine-tuné](results/retrieval_base_vs_finetuned.png)
 
+### Génération (F1)
 
-## 9. Limites
+| Système | RAG | Closed-book |
+|---------|----:|------------:|
+| Base | 0.312 | 0.144 |
+| Fine-tuné | 0.325 | 0.150 |
 
-- Le générateur par défaut (~1.3B) reste modeste : utile pédagogiquement, mais un
-  modèle 7B quantifié donne de meilleures réponses.
-- Le jeu d'évaluation est généré par un LLM : il peut contenir des questions
-  imparfaites — un filtrage/relecture d'un échantillon est recommandé.
-- Le contenu de MDN évolue dans le temps ; figez éventuellement un commit du
-  dépôt source pour une reproductibilité parfaite.
+(Détails complets — EM, ROUGE-L, ablation sur `k` — dans `results/report_*.json`.)
 
+---
 
-## 10. Crédits et licence
+## 10. Analyse et conclusions
 
-- Corpus : [MDN Web Docs](https://developer.mozilla.org/), Mozilla Contributors,
-  licence **CC-BY-SA**.
-- Modèles : CroissantLLM (CentraleSupélec et al.), e5 (Microsoft), via Hugging Face.
-- Code de ce projet : libre d'utilisation à des fins pédagogiques.
+**RAG vs closed-book.** Le résultat central : avec l'embedder de base, le F1
+passe de 0.144 (closed-book) à 0.312 (RAG), soit **plus du double**. Fournir le
+contexte récupéré améliore donc fortement la qualité des réponses par rapport à
+la seule mémoire paramétrique du modèle. La récupération n'est pas décorative,
+elle porte la performance.
+
+**Apport de la spécialisation.** Le fine-tuning de l'embedder améliore la
+récupération sur toute la ligne, surtout en haut du classement (`hit@1` : +8 pts,
+`hit@3` : +9 pts, MRR : +7 pts) : le modèle spécialisé place plus souvent le bon
+passage en première position. Les gains se resserrent à `hit@10` (effet plafond).
+L'effet sur la génération end-to-end est positif mais modeste
+(F1 0.312 → 0.325) : aux rangs effectivement utilisés, les deux récupérateurs
+ramènent déjà souvent le bon passage, donc l'amélioration ne joue que sur les cas
+limites.
+
+**Limite de l'Exact Match.** L'EM est quasi nul partout : c'est attendu. Un LLM
+génératif produit des phrases reformulées, pas des *spans* exacts ; l'EM est donc
+peu adapté à la génération libre. Le F1 et le ROUGE-L sont ici plus pertinents.
+
+**Perspectives.** Une évaluation sémantique (BERTScore, ou *LLM-as-judge*)
+capturerait mieux la qualité réelle des réponses. Un *re-ranking* ou un seuil de
+pertinence sur les passages récupérés réduirait les digressions observées sur les
+questions très générales.
+
+---
+
+## 11. Démonstration interactive
+
+Le notebook lance une interface **Gradio** permettant de poser des questions au
+système et d'afficher la réponse générée ainsi que les passages sources récupérés.
+Voir la dernière section de `RAG_.ipynb`.
