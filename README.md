@@ -8,7 +8,6 @@ L'objectif : montrer concrètement qu'un LLM relié à une base documentaire
 (via récupération sémantique) répond de façon plus **fidèle** et **exacte**
 qu'un LLM seul, et étudier ce qui fait varier cette performance.
 
----
 
 ## 1. Problématique
 
@@ -23,7 +22,6 @@ On y répond par trois expériences comparatives :
 2. **ablation sur `k`** — évolution de Hit@k et du MRR selon le nombre de passages.
 3. **retrieveur de base vs spécialisé** — gain du fine-tuning de l'embedding model.
 
----
 
 ## 2. Cas d'usage et données
 
@@ -38,7 +36,6 @@ On y répond par trois expériences comparatives :
   le passage source sert de **vérité terrain** pour mesurer la récupération
   (`ragdoc/eval_set.py`).
 
----
 
 ## 3. Architecture
 
@@ -59,7 +56,6 @@ Question ──► [Retrieveur] ──► top-k passages ──► [Générateur
 > avec quantization 4 bits (`CONFIG.model.load_in_4bit = True`). Ce modèle est
 > *gated* sur Hugging Face : il faut accepter sa licence et fournir un token.
 
----
 
 ## 4. Installation
 
@@ -77,7 +73,6 @@ pip install -r requirements.txt
 ```
 Un GPU est fortement recommandé pour le générateur (CPU possible mais lent).
 
----
 
 ## 5. Reproduire le projet (pas à pas)
 
@@ -110,7 +105,6 @@ rag = RagPipeline(Retriever.load(), Generator())
 print(rag.answer("À quoi sert l'élément HTML <article> ?")["answer"])
 ```
 
----
 
 ## 6. Structure du dépôt
 
@@ -135,7 +129,6 @@ rag-doc-technique-fr/
 └── results/                    # rapports d'évaluation (JSON)
 ```
 
----
 
 ## 7. Métriques
 
@@ -146,7 +139,6 @@ rag-doc-technique-fr/
   (*faithfulness*, *answer relevancy*, *context precision/recall*) — nécessite un
   LLM juge ; dépendance commentée dans `requirements.txt`.
 
----
 
 ## 8. Résultats
 
@@ -161,7 +153,6 @@ rag-doc-technique-fr/
 Pistes d'analyse : gain du RAG vs closed-book, palier de `k`, apport du
 fine-tuning, cas d'échec (qualité du petit LLM, bruit du corpus…).
 
----
 
 ## 9. Limites
 
@@ -172,11 +163,10 @@ fine-tuning, cas d'échec (qualité du petit LLM, bruit du corpus…).
 - Le contenu de MDN évolue dans le temps ; figez éventuellement un commit du
   dépôt source pour une reproductibilité parfaite.
 
----
 
 ## 10. Crédits et licence
 
 - Corpus : [MDN Web Docs](https://developer.mozilla.org/), Mozilla Contributors,
   licence **CC-BY-SA**.
-- Modèles : CroissantLLM (CentraleSupélec et al.), e5 (Microsoft), via 🤗 Hugging Face.
+- Modèles : CroissantLLM (CentraleSupélec et al.), e5 (Microsoft), via Hugging Face.
 - Code de ce projet : libre d'utilisation à des fins pédagogiques.
