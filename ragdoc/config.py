@@ -50,9 +50,9 @@ class ModelConfig:
     # Modèle d'embedding spécialisé (rempli après fine-tuning)
     finetuned_embedding_dir: str = str(DATA_DIR / "embedder_finetuned")
 
-    # Modèle générateur. CroissantLLMChat = libre, bilingue FR/EN, ~1.3B,
-    generator_model: str = "croissantllm/CroissantLLMChat-v0.1"
-    load_in_4bit: bool = False
+    # Modèle générateur.
+    generator_model: str = "unsloth/mistral-7b-instruct-v0.3"
+    load_in_4bit: bool = True
 
     max_new_tokens: int = 256
     temperature: float = 0.3
