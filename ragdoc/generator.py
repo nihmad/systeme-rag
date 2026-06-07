@@ -46,7 +46,9 @@ class Generator:
                 top_p=0.9,
                 repetition_penalty=1.05,
                 # 32000 = token de fin de tour de CroissantLLMChat
-                eos_token_id=[self.tokenizer.eos_token_id, 32000],
+                eos_token_id=([self.tokenizer.eos_token_id, 32000]
+                              if "croissant" in self.model_name.lower()
+                              else self.tokenizer.eos_token_id),
                 pad_token_id=self.tokenizer.eos_token_id,
             )
         new_tokens = tokens[0][inputs["input_ids"].shape[1]:]
