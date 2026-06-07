@@ -5,8 +5,6 @@ Produit :
   (A) Métriques de RÉCUPÉRATION pour chaque k (Hit@k, MRR) sur tout le jeu.
   (B) Métriques de GÉNÉRATION comparant closed-book vs RAG (EM, F1, ROUGE-L)
       sur un sous-échantillon (la génération est coûteuse).
-
-Lance avec l'index de base ou l'index spécialisé (--finetuned) pour comparer.
 Les résultats sont écrits dans results/.
 """
 import argparse
@@ -76,7 +74,7 @@ if __name__ == "__main__":
     t0 = time.time()
     report = {"tag": tag, "n_eval": len(eval_rows),
               "retrieval": eval_retrieval(retriever, eval_rows)}
-    print("\n=== RÉCUPÉRATION ===")
+    print("\nRÉCUPÉRATION")
     print(json.dumps(report["retrieval"], indent=2, ensure_ascii=False))
 
     if not args.skip_generation:
@@ -85,7 +83,7 @@ if __name__ == "__main__":
         subset = eval_rows[:args.n_gen]
         report["generation"] = eval_generation(pipeline, subset)
         report["generation"]["n_gen"] = len(subset)
-        print("\n=== GÉNÉRATION (RAG vs closed-book) ===")
+        print("\n GÉNÉRATION (RAG vs closed-book)")
         print("RAG        :", report["generation"]["rag"])
         print("Closed-book:", report["generation"]["closed_book"])
 
