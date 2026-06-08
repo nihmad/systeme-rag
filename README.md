@@ -1,6 +1,6 @@
 # Système RAG sur la documentation web MDN (français)
 
-> Projet du cours **Large Language Models** — ADEOTI Nihimath
+Projet du cours **Large Language Models** — ADEOTI Nihimath
 
 Système de **Retrieval-Augmented Generation (RAG)** appliqué à la documentation
 technique web de [MDN](https://developer.mozilla.org/fr/) en français. Le projet
@@ -23,9 +23,9 @@ une réponse ancrée dans des sources réelles.
 
 Ce projet répond à trois questions :
 
-1. **RAG vs closed-book** — le contexte récupéré améliore-t-il la qualité des réponses ?
-2. **Effet de `k`** — combien de passages faut-il récupérer ?
-3. **Récupérateur de base vs spécialisé** — fine-tuner l'*embedder* sur le domaine améliore-t-il la récupération, et par ricochet la génération ?
+1. **RAG vs closed-book**  le contexte récupéré améliore-t-il la qualité des réponses ?
+2. **Effet de `k`** :combien de passages faut-il récupérer ?
+3. **Récupérateur de base vs spécialisé** : fine-tuner l'*embedder* sur le domaine améliore-t-il la récupération, et par ricochet la génération ?
 
 
 ## 2. Architecture du système
@@ -79,7 +79,6 @@ systeme-rag/
 
 
 ## 4. Données
-
 - **Source** : sous-ensemble de [MDN translated-content](https://github.com/mdn/translated-content),
   la documentation MDN traduite en français (contenu open source de Mozilla).
 - **Récupération** (`scripts/01_build_corpus.py`) : *sparse-checkout* du dépôt MDN
