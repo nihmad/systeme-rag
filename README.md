@@ -8,7 +8,7 @@ compare un modèle de langage seul à un modèle augmenté par récupération, �
 l'influence du nombre de passages récupérés, et mesure l'apport de la
 spécialisation (fine-tuning) du modèle de récupération.
 
----
+
 
 ## 1. Cas d'usage et problématique
 
@@ -27,7 +27,6 @@ Ce projet répond à trois questions :
 2. **Effet de `k`** — combien de passages faut-il récupérer ?
 3. **Récupérateur de base vs spécialisé** — fine-tuner l'*embedder* sur le domaine améliore-t-il la récupération, et par ricochet la génération ?
 
----
 
 ## 2. Architecture du système
 
@@ -45,7 +44,6 @@ flowchart LR
 - **Générateur** : **Mistral-7B-Instruct v0.3** quantifié en 4 bits, qui rédige la réponse à partir des passages récupérés.
 - **Pipeline** : `question → récupération top-k → construction du prompt → génération`.
 
----
 
 ## 3. Structure du dépôt
 
@@ -69,7 +67,7 @@ systeme-rag/
 │   ├── report_base.json
 │   ├── report_finetuned.json
 │   └── retrieval_base_vs_finetuned.png
-├── RAG_.ipynb                  # Notebook de démonstration de bout en bout
+├── ADEOTI_Nihimath_Systeme_RAG_LLM.ipynb                  # Notebook de démonstration de bout en bout
 ├── requirements.txt
 └── README.md
 ```
@@ -79,7 +77,6 @@ systeme-rag/
 > ils ne sont pas versionnés. Seul `eval_set.jsonl` est committé, car c'est lui qui
 > garantit que l'évaluation est reproductible à l'identique.
 
----
 
 ## 4. Données
 
@@ -101,7 +98,6 @@ systeme-rag/
 
 Les paramètres de découpage sont centralisés dans `ragdoc/config.py` (`ChunkConfig`).
 
----
 
 ## 5. Modèles utilisés
 
@@ -117,7 +113,6 @@ Paramètres de génération : `temperature = 0.3`, `max_new_tokens = 256`.
 > (`ModelConfig`) : `generator_model = "unsloth/mistral-7b-instruct-v0.3"`,
 > `load_in_4bit = True`, `embedding_model = "intfloat/multilingual-e5-base"`.
 
----
 
 ## 6. Installation
 
@@ -130,11 +125,10 @@ cd systeme-rag
 pip install -r requirements.txt
 ```
 
-> *(Optionnel)* Définir un jeton HuggingFace (`HF_TOKEN`) accélère les
+> (Optionnel) Définir un jeton HuggingFace (`HF_TOKEN`) accélère les
 > téléchargements de modèles et lève les limites de débit. L'authentification
 > n'est pas obligatoire pour les modèles publics utilisés ici.
 
----
 
 ## 7. Reproduction étape par étape
 
@@ -167,10 +161,8 @@ L'option `--n_gen 30` limite l'évaluation de la **génération** à 30 exemples
 (la génération LLM est coûteuse en temps), tandis que les métriques de
 **récupération** sont calculées sur l'ensemble du jeu d'évaluation.
 
-Le notebook `RAG_.ipynb` reproduit ces étapes de bout en bout et fournit en plus
+Le notebook `ADEOTI_Nihimath_Systeme_RAG_LLM.ipynb` reproduit ces étapes de bout en bout et fournit en plus
 une **démonstration interactive** (interface Gradio) et le graphique comparatif.
-
----
 
 ## 8. Évaluation et métriques
 
@@ -239,10 +231,8 @@ capturerait mieux la qualité réelle des réponses. Un *re-ranking* ou un seuil
 pertinence sur les passages récupérés réduirait les digressions observées sur les
 questions très générales.
 
----
-
 ## 11. Démonstration interactive
 
 Le notebook lance une interface **Gradio** permettant de poser des questions au
 système et d'afficher la réponse générée ainsi que les passages sources récupérés.
-Voir la dernière section de `RAG_.ipynb`.
+Voir la dernière section de `ADEOTI_Nihimath_Systeme_RAG_LLM.ipynb`.
