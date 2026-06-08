@@ -1,0 +1,87 @@
+{
+  "tag": "base",
+  "n_eval": 100,
+  "retrieval": {
+    "hit@1": 0.56,
+    "hit@3": 0.82,
+    "hit@5": 0.86,
+    "hit@10": 0.92,
+    "mrr": 0.6957
+  },
+  "generation": {
+    "rag": {
+      "EM": 0.0,
+      "F1": 0.3046,
+      "ROUGE_L": 0.2937
+    },
+    "closed_book": {
+      "EM": 0.0,
+      "F1": 0.1489,
+      "ROUGE_L": 0.1428
+    },
+    "examples": [
+      {
+        "question": "Quel est l'espace de couleur à partir duquel la couleur de sortie est convertie lorsqu'il y a une différence de modèle de couleur entre la couleur d'origine et la couleur de sortie ?",
+        "reference": "Le même espace de couleur que la couleur de sortie en arrière-plan.",
+        "rag_answer": "L'espace de couleur à partir duquel la couleur de sortie est convertie lorsqu'il y a une différence de modèle de couleur entre la couleur d'origine et la couleur de sortie est toujours celui de la couleur de sortie. Cela permet de représenter la couleur d'origine de manière compatible avec la couleur de sortie, en utilisant les mêmes canaux.",
+        "closed_book_answer": "L'espace de couleur utilisé pour la conversion est l'espace de couleur sRGB (Standard RGB) pour les conversions normales. Cependant, il peut y avoir des cas où d'autres espaces de couleur sont utilisés, tels que l'espace de couleur Adobe RGB ou le Lab. Dans ces cas, il faut effectuer une conversion préalable vers l'espace de couleur sRGB avant la conversion vers l'espace de couleur cible."
+      },
+      {
+        "question": "Quel attribut permet de définir l'URL préférée pour le document actuel, ce qui aide les moteurs de recherche à réduire le contenu dupliqué ?",
+        "reference": "L'attribut est `canonical`.",
+        "rag_answer": "L'attribut `canonical` permet de définir l'URL préférée pour le document actuel, ce qui aide les moteurs de recherche à réduire le contenu dupliqué.",
+        "closed_book_answer": "L'attribut qui permet de définir l'URL préférée pour le document actuel est `<link rel=\"canonical\" href=\"URL_principale\">`. Il s'agit d'un élément HTML qui aide les moteurs de recherche à identifier la version originale d'un contenu, ce qui permet de réduire le risque de contenu dupliqué."
+      },
+      {
+        "question": "Quelle est la priorité de la déclaration d'une couche CSS déclarée en dernier comparée à celle d'une couche CSS déclarée en premier ?",
+        "reference": "La dernière couche déclarée a la priorité la plus forte.",
+        "rag_answer": "Dans le contexte fourni, la déclaration d'une couche CSS déclarée en dernier a une priorité plus élevée que celle d'une couche CSS déclarée en premier. Cela est dû au fait que l'ordre de déclaration des couches est important et que la dernière couche déclarée a la priorité la plus forte. Cependant, si une déclaration importante est présente dans une couche, elle prendra toujours la priorité sur toutes les déclarations normales, quel que soit leur ordre de déclaration ou leur ordre de précédence.",
+        "closed_book_answer": "La priorité de déclaration d'une couche CSS dépend de son ordre dans le document HTML ou du fichier CSS. En général, une déclaration de style plus tardive a priorité sur une déclaration plus ancienne. Cela signifie que si une propriété est définie deux fois, la dernière déclaration aura effet. Cependant, il existe des exceptions à cette règle avec les feuilles de styles importées (`@import`) et les feuilles de styles inline (déclarées directement dans l'élément HTML). Dans ces cas, les feuilles de styles importées ont priorité sur les feuilles de styles liées dans le document HTML, et les feuilles de styles inline ont priorité sur toutes les autres feuilles de styles."
+      },
+      {
+        "question": "Quel est le cas où le bord droit de l'image coïncide avec le bord droit du conteneur ?",
+        "reference": "-200px",
+        "rag_answer": "Le bord droit de l'image coïncide avec le bord droit du conteneur lorsque la propriété CSS `right` est définie à `0%`. Cela signifie que le décalage du bord vertical droit de l'image d'arrière-plan par rapport au bord vertical droit de la couche de position d'arrière-plan est de `0%`, ce qui signifie que le bord droit de l'image d'arrière-plan est aligné avec le bord droit du conteneur.",
+        "closed_book_answer": "Dans le contexte du développement web, pour que le bord droit d'une image coïncide avec le bord droit du conteneur, il faut utiliser la propriété CSS `right: 0`. Cela signifie que l'image sera alignée à droite du conteneur. Pour que l'image occupe toute la largeur du conteneur, il faut également utiliser la propriété `width: 100%`. Il est également important de vérifier que le conteneur lui-même a une largeur définie ou qu'il occupe toute la largeur de son parent."
+      },
+      {
+        "question": "Quelle est la définition de la propriété `right` pour un élément positionné absolument ou fixé ?",
+        "reference": "La propriété `right` définit la distance entre la marge extérieure du bord droit de l'élément et la bordure intérieure du bord droit de son bloc englobant.",
+        "rag_answer": "La propriété `right` pour un élément positionné absolument ou fixé définit la distance entre la marge extérieure du bord droit de l'élément et la bordure intérieure du bord droit de son bloc englobant. Si l'élément positionné a un _élément ancre_ associé, et que la valeur de la propriété inclut une fonction, `right` positionne le bord droit de l'élément positionné par rapport au bord défini.",
+        "closed_book_answer": "La propriété `right` est utilisée pour définir la position horizontale d'un élément positionné absolument ou fixé sur la page web. Elle permet de spécifier la distance à droite de l'élément par rapport au bord droit de son conteneur parent. Les unités de mesure acceptées sont généralement les pixels (px) ou les pourcentages (%). Si on ne spécifie pas de valeur pour la propriété `left`, celle-ci est par défaut à zéro, ce qui signifie que l'élément sera aligné à droite du conteneur parent."
+      },
+      {
+        "question": "Quel est le format pour représenter une date valide dans cette documentation technique ?",
+        "reference": "Une chaîne de caractères de date valide consiste en une chaîne de caractères de mois, suivie d'un caractère tiret (-, ou U+002D), suivi d'un numéro de jour dans le mois sur deux chiffres.",
+        "rag_answer": "Le format pour représenter une date valide dans cette documentation technique est yyyy-mm-dd. Cette représentation ne comprend pas d'heure.",
+        "closed_book_answer": "Le format le plus courant pour représenter une date valide dans la documentation technique du développement web est ISO 8601, qui utilise le format `YYYY-MM-DD`. Par exemple, la date du 1er janvier 2023 serait représentée comme `2023-01-01`. Il est également possible d'utiliser des formats plus courts tels que `YYYY/MM/DD` ou `DD/MM/YYYY`, mais il est recommandé d'utiliser le format ISO 8601 pour éviter toute ambiguïté."
+      },
+      {
+        "question": "Quelle est la valeur initiale de la propriété `align-items` pour les éléments flexibles ?",
+        "reference": "La valeur initiale de la propriété `align-items` est `stretch`.",
+        "rag_answer": "La valeur initiale de la propriété `align-items` pour les éléments flexibles est `stretch`.",
+        "closed_book_answer": "La valeur initiale de la propriété `align-items` pour les éléments flexibles est `stretch`. Cela signifie que les éléments flexibles s'étirent pour occuper toute la hauteur de leur conteneur parent."
+      },
+      {
+        "question": "Quel est l'équivalent de la fonction `rotateY(a)` en utilisant `rotate3d()` ?",
+        "reference": "`rotate3d(0, 1, 0, a)`",
+        "rag_answer": "L'équivalent de la fonction `rotateY(a)` en utilisant `rotate3d()` est `rotate3d(0, 1, 0, a)`.",
+        "closed_book_answer": "L'équivalent de la fonction `rotateY(a)` en utilisant `rotate3d()` est `rotate3d(0, 1, 0, a)`. La fonction `rotate3d()` permet de tourner autour des trois axes x, y et z. Dans ce cas, on tourne autour de l'axe y en utilisant les valeurs (0, 1, 0)."
+      },
+      {
+        "question": "Quel élément ne sera pas sélectionné comme ancre dans un document avec la propriété overflow-anchor ?",
+        "reference": "L'élément ne sera pas sélectionné.",
+        "rag_answer": "Dans un document avec la propriété `overflow-anchor`, un élément ne sera pas sélectionné comme ancre si sa valeur est `none`. Cela signifie que l'élément ne sera pas utilisé pour l'ancrage du défilement.",
+        "closed_book_answer": "Dans un document HTML, l'élément `<a>` ne sera pas sélectionné comme ancre si son parent ne possède pas la propriété `overflow` définie sur une valeur autre que `visible`. La propriété `overflow-anchor` est utilisée pour spécifier si les liens internes doivent être automatiquement convertis en ancres (`auto`) ou non (`none`). Cependant, cette propriété n'a pas d'effet sur la sélection de l'élément `<a>` comme ancre."
+      },
+      {
+        "question": "Quel est le comportement du conteneur lorsqu'on utilise snapped: none ?",
+        "reference": "Le conteneur n'est pas une cible d'accrochage pour son conteneur parent.",
+        "rag_answer": "Lorsque vous utilisez `snapped: none` sur un conteneur, ce conteneur n'est pas une cible d'accrochage pour son conteneur parent. Si un conteneur parent a une propriété d'alignement au défilement, les conteneurs qui sont des cibles d'accrochage n'auront pas les styles `@container`, tandis que les non-cibles les auront.",
+        "closed_book_answer": "Dans le contexte de Bootstrap 5, `snapped` est une classe utilisée pour gérer les alignements des colonnes dans un grid system. Lorsque vous utilisez `snapped-none`, cela signifie que la colonne ne sera pas alignée sur les limites pré-définies du grid, elle sera affichée à sa position initiale. Cela permet d'avoir plus de contrôle sur l'alignement des colonnes dans votre layout."
+      }
+    ],
+    "n_gen": 30
+  },
+  "elapsed_sec": 578.4
+}
